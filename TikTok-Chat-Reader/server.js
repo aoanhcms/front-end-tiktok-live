@@ -19,12 +19,12 @@ app.use(cors())
 
 
 
-let CommentModel = require('./models/Comment')
-let UserModel = require('./models/User')
-let GiftModel = require('./models/Gift')
-let LikeModel = require('./models/Like')
-let LiveIdModel = require('./models/LiveId')
-let ChanelModel = require('./models/Chanel')
+let CommentModel = require('./models/comment')
+let UserModel = require('./models/user')
+let GiftModel = require('./models/gift')
+let LikeModel = require('./models/like')
+let LiveIdModel = require('./models/liveId')
+let ChanelModel = require('./models/chanel')
 // Enable cross origin resource sharing
 const io = new Server(httpServer, {
     cors: {
