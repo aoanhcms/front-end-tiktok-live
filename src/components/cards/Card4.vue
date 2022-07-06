@@ -59,14 +59,13 @@
           data-kt-drawer-target="#kt_drawer_chat"
           @click="openDrawer()"
         >
-          Message Lists
+          LiveChat List
         </button>
         <!--end::Link-->
       </div>
       <!--begin::Card body-->
     </div>
     <!--begin::Card-->
-    <messenger-drawer :messages="messages" />
   </div>
   <!--end::Col-->
 </template>
@@ -75,12 +74,8 @@
 import { defineComponent } from "vue";
 import { DrawerComponent } from "@/assets/ts/components/_DrawerComponent";
 
-import MessengerDrawer from "./MessengerDrawer.vue";
 export default defineComponent({
   name: "card-4",
-  components: {
-    MessengerDrawer,
-  },
   data() {
     return {
       messages: [],
@@ -108,13 +103,10 @@ export default defineComponent({
   },
   methods: {
     openDrawer() {
-      this.$http
-        .get("http://localhost:8081/get_comment_lists?user_id=" + this.user_id)
-        .then((res) => {
-          console.log("req", res);
-          this.messages = res.data;
-        });
-      DrawerComponent?.getInstance("message_list_drawer_chat")?.toggle();
+      this.$router.push({
+        name: "apps-live-chat-id-list",
+        params: { channelId: this.user_id },
+      });
     },
   },
 });

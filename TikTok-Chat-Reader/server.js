@@ -24,7 +24,7 @@ let UserModel = require('./models/user')
 let GiftModel = require('./models/gift')
 let LikeModel = require('./models/like')
 let LiveIdModel = require('./models/liveId')
-let ChanelModel = require('./models/chanel')
+let ChannelModel = require('./models/channel')
 // Enable cross origin resource sharing
 const io = new Server(httpServer, {
     cors: {
@@ -32,17 +32,31 @@ const io = new Server(httpServer, {
     }
 });
 app.get('/get_user_lists', async (req, res) => {
-    let userModel = await UserModel.find({})
-        .populate({
-            path: 'liveId',
-            populate: {
-                path: 'chanelId',
-            }
-        })
-        .sort({commentCount: 'desc'}).limit(100).exec()
-    res.json(userModel)
+    if(typeof req.query.livechat_id !== 'undefined'){
+        let userModel = await UserModel.find({liveId: req.query.livechat_id})
+            .populate({
+                path: 'liveId',
+                populate: {
+                    path: 'channelId',
+                }
+            })
+            .sort({commentCount: 'desc'}).limit(100).exec()
+        res.json(userModel)
+        
+    }else {
+        res.json("Error channel_id")
+    }
 })
 
+app.get('/filters', async (req, res) => {
+    if(typeof req.query.q !== 'undefined'){
+        let userModel = await UserModel.find({$text:{ $search: req.query.q}})
+            .sort({commentCount: 'desc'}).limit(100).exec()
+        res.json(userModel)
+    }else {
+        res.json("Error channel_id")
+    }
+})
 app.get('/get_comment_lists', async (req, res) => {
     if(typeof req.query.user_id !== 'undefined'){
         let commentModel = await CommentModel.find({userId: req.query.user_id})
@@ -56,6 +70,24 @@ app.get('/get_comment_lists', async (req, res) => {
     }
 })
 
+app.get('/get_channels', async (req, res) => {
+    let channelModel = await ChannelModel.find({})
+    .limit(100)
+    .exec()
+    res.json(channelModel)
+})
+
+app.get('/get_live_chat_ids', async (req, res) => {
+    if(typeof req.query.channel_id !== 'undefined'){
+        let liveIdModel = await LiveIdModel.find({channelId: req.query.channel_id})
+        .limit(100)
+        .exec()
+        res.json(liveIdModel)
+    }else {
+        res.json("Error channel_id")
+    }
+})
+
 io.on('connection', (socket) => {
     let tiktokConnectionWrapper;
 
@@ -64,11 +96,11 @@ io.on('connection', (socket) => {
     //lay danh sach message
     socket.on('setUniqueId', async (uniqueId, options) => {
         //save chanel
-        let chanelModel = await ChanelModel.findOne({username: uniqueId})
+        let channelModel = await ChannelModel.findOne({username: uniqueId})
             .exec()
-        if(chanelModel === null) {
+        if(channelModel === null) {
             //create
-            chanelModel = await new ChanelModel({
+            channelModel = await new ChannelModel({
                 username: uniqueId
             }).save()
         }
@@ -107,9 +139,13 @@ io.on('connection', (socket) => {
                     //create
                     liveIdModel = await new LiveIdModel({
                         liveId: state.roomId,
-                        chanelId: chanelModel._id
+                        channelId: channelModel._id
                     }).save()
                 }
+                ChannelModel.findOne({_id: channelModel._id}).exec().then( result => {
+                    result.liveChatCount++;
+                    result.save();
+                });
                 resolve(liveIdModel)
                 socket.emit('tiktokConnected', state)
             });
@@ -146,6 +182,10 @@ io.on('connection', (socket) => {
                         */
                     }).save()
                 }
+                LiveIdModel.findOne({_id: LIVECHATID._id}).exec().then( result => {
+                    result.UserCount++;
+                    result.save();
+                });
                 socket.emit('member', msg)
                 resolve(userModel)
             })
@@ -162,7 +202,7 @@ io.on('connection', (socket) => {
                 //"isSubscriber": false,
                 //"topGifterRank": null,
             }).save()
-            console.log('comment', msg);
+            //console.log('comment', msg);
                 //cộng comment vào user
             UserModel.findOne({_id: USERID._id}).exec().then( result => {
                 result.commentCount++;
@@ -194,12 +234,12 @@ io.on('connection', (socket) => {
                 receiverUserId: '6868539471827403778',
                 
              */
-            console.log('gift', msg);
+            //console.log('gift', msg);
             socket.emit('gift', msg)
         });
         tiktokConnectionWrapper.connection.on('social', async msg => {
             //followed the host
-            console.log('social', msg);
+            //console.log('social', msg);
             socket.emit('social', msg)
         });
         tiktokConnectionWrapper.connection.on('like', async msg => {
@@ -217,7 +257,7 @@ io.on('connection', (socket) => {
             //   label: '{0:user} sent likes to the host'
 
             })
-            console.log('like', msg);
+            //console.log('like', msg);
             socket.emit('like', msg)
         });
         tiktokConnectionWrapper.connection.on('questionNew', msg => socket.emit('questionNew', msg));

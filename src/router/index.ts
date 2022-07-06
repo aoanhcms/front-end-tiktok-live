@@ -150,9 +150,21 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/views/apps/chat/Chat.vue"),
       },
       {
-        path: "/apps/chat/drawer-chat",
-        name: "apps-drawer-chat",
-        component: () => import("@/views/apps/chat/DrawerChat.vue"),
+        path: "/apps/chat/users/:livechatId",
+        name: "apps-user-list-chat",
+        props: true,
+        component: () => import("@/views/apps/chat/UserListChat.vue"),
+      },
+      {
+        path: "/apps/chat/channels",
+        name: "apps-channel-list",
+        component: () => import("@/views/apps/chat/ChannelList.vue"),
+      },
+      {
+        path: "/apps/chat/livechat/:channelId",
+        name: "apps-live-chat-id-list",
+        props: true,
+        component: () => import("@/views/apps/chat/LiveChatIdList.vue"),
       },
       {
         path: "/crafted/modals/general/invite-friends",

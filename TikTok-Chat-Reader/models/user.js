@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 let Schema = new mongoose.Schema({
   userId: String,
-  nickname: String,
+  nickname: {type: String},
   uniqueId: String,
   image: String,
   commentCount: {
@@ -12,4 +12,5 @@ let Schema = new mongoose.Schema({
   timestamps: true
 })
 
+Schema.index({nickname: 'text'});
 module.exports = mongoose.model('User', Schema)

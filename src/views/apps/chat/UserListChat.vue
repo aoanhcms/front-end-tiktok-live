@@ -31,8 +31,6 @@
         <tr>
           <th scope="col">#</th>
           <th scope="col">image</th>
-          <th scope="col">Channel</th>
-          <th scope="col">LiveId</th>
           <th scope="col">nickname</th>
           <th scope="col">commentCount</th>
           <th scope="col">uniqueId</th>
@@ -43,8 +41,6 @@
         <tr v-for="(row, k) in rows" :key="k">
           <th scope="row">{{ k }}</th>
           <td><img :src="row.image" /></td>
-          <td>{{ row.liveId.chanelId.username }}</td>
-          <td>{{ row.liveId.liveId }}</td>
           <td>{{ row.nickname }}</td>
           <td>{{ row.commentCount }}</td>
           <td>{{ row.uniqueId }}</td>
@@ -79,29 +75,6 @@ export default defineComponent({
   // @anhquan_198
   data() {
     return {
-      columns: [
-        {
-          label: "Name",
-          field: "name",
-        },
-        {
-          label: "Age",
-          field: "age",
-          type: "number",
-        },
-        {
-          label: "Created On",
-          field: "createdAt",
-          type: "date",
-          dateInputFormat: "yyyy-MM-dd",
-          dateOutputFormat: "MMM do yy",
-        },
-        {
-          label: "Percent",
-          field: "score",
-          type: "percentage",
-        },
-      ],
       rows: [],
       users: [],
       messages: [],
@@ -109,11 +82,16 @@ export default defineComponent({
       loading: false,
     };
   },
+  props: ["livechatId"],
   methods: {
     async getTableData() {
       this.loading = true;
       this.$http
-        .get(process.env.VUE_APP_SOCKET_ENDPOINT + "/get_user_lists")
+        .get(
+          process.env.VUE_APP_SOCKET_ENDPOINT +
+            "/get_user_lists?livechat_id=" +
+            this.livechatId
+        )
         .then((res) => {
           this.rows = res.data;
           this.loading = false;

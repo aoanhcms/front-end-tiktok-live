@@ -9,7 +9,7 @@ const DocMenuConfig = [
       },
       {
         heading: "User Chat Lists",
-        route: "/apps/chat/drawer-chat",
+        route: "/apps/chat/channels",
         svgIcon: "media/icons/duotune/general/gen019.svg",
         fontIcon: "bi-layers",
       },

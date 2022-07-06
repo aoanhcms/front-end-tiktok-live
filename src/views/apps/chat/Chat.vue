@@ -21,7 +21,7 @@
         <!--begin::Card header-->
         <div class="card-header pt-7" id="kt_chat_contacts_header">
           <!--begin::Form-->
-          <form class="w-100 position-relative" autocomplete="off">
+          <div class="w-100 position-relative">
             <!--begin::Icon-->
             <span
               class="svg-icon svg-icon-2 svg-icon-lg-1 svg-icon-gray-500 position-absolute top-50 ms-5 translate-middle-y"
@@ -33,14 +33,14 @@
             <!--begin::Input-->
             <input
               v-model="search"
-              @keypress="onSearch"
+              @keydown="onSearch"
               type="text"
               class="form-control form-control-solid px-15"
               name="search"
-              placeholder="Search by username or email..."
+              placeholder="Tìm và nhấn enter ..."
             />
             <!--end::Input-->
-          </form>
+          </div>
           <!--end::Form-->
         </div>
         <!--end::Card header-->
@@ -58,41 +58,82 @@
             data-kt-scroll-offset="0px"
           >
             <div v-if="loading" id="loading">LOADING.....</div>
-            <template v-for="(item, index) in contacts" :key="index">
-              <div class="d-flex flex-stack py-4">
-                <!--begin::Details-->
-                <div class="d-flex align-items-center">
-                  <!--begin::Avatar-->
-                  <div class="symbol symbol-45px symbol-circle">
-                    <img v-if="item.image" :src="item.image" alt="" />
-                    <span
-                      v-else
-                      :class="`bg-light-${item.color} text-${item.color}`"
-                      class="symbol-label fs-6 fw-bolder"
-                      >{{ item.name.charAt(0) }}</span
-                    >
-                  </div>
-                  <!--end::Avatar-->
+            <div v-if="search == ''">
+              <template v-for="(item, index) in contacts" :key="index">
+                <div class="d-flex flex-stack py-4">
                   <!--begin::Details-->
-                  <div class="ms-5">
-                    <a
-                      href="#"
-                      class="fs-5 fw-bolder text-gray-900 text-hover-primary mb-2"
-                      >{{ item.name }}</a
-                    >
-                    <div class="fw-bold text-gray-400">{{ item.email }}</div>
+                  <div class="d-flex align-items-center">
+                    <!--begin::Avatar-->
+                    <div class="symbol symbol-45px symbol-circle">
+                      <img v-if="item.image" :src="item.image" alt="" />
+                      <span
+                        v-else
+                        :class="`bg-light-${item.color} text-${item.color}`"
+                        class="symbol-label fs-6 fw-bolder"
+                        >{{ item.nickname.charAt(0) }}</span
+                      >
+                    </div>
+                    <!--end::Avatar-->
+                    <!--begin::Details-->
+                    <div class="ms-5">
+                      <a
+                        href="#"
+                        class="fs-5 fw-bolder text-gray-900 text-hover-primary mb-2"
+                        >{{ item.nickname }}</a
+                      >
+                    </div>
+                    <!--end::Details-->
                   </div>
                   <!--end::Details-->
-                </div>
-                <!--end::Details-->
 
-                <!--begin::Lat seen-->
-                <div class="d-flex flex-column align-items-end ms-2">
-                  <span class="text-muted fs-7 mb-1">{{ item.time }}</span>
+                  <!--begin::Lat seen-->
+                  <div class="d-flex flex-column align-items-end ms-2">
+                    <span class="text-muted fs-7 mb-1">{{
+                      item.createdAt
+                    }}</span>
+                  </div>
+                  <!--end::Lat seen-->
                 </div>
-                <!--end::Lat seen-->
-              </div>
-            </template>
+              </template>
+            </div>
+            <div v-else>
+              <template v-for="(item, index) in contactsSearch" :key="index">
+                <div class="d-flex flex-stack py-4">
+                  <!--begin::Details-->
+                  <div class="d-flex align-items-center">
+                    <!--begin::Avatar-->
+                    <div class="symbol symbol-45px symbol-circle">
+                      <img v-if="item.image" :src="item.image" alt="" />
+                      <span
+                        v-else
+                        :class="`bg-light-${item.color} text-${item.color}`"
+                        class="symbol-label fs-6 fw-bolder"
+                        >{{ item.nickname.charAt(0) }}</span
+                      >
+                    </div>
+                    <!--end::Avatar-->
+                    <!--begin::Details-->
+                    <div class="ms-5">
+                      <a
+                        href="#"
+                        class="fs-5 fw-bolder text-gray-900 text-hover-primary mb-2"
+                        >{{ item.nickname }}</a
+                      >
+                    </div>
+                    <!--end::Details-->
+                  </div>
+                  <!--end::Details-->
+
+                  <!--begin::Lat seen-->
+                  <div class="d-flex flex-column align-items-end ms-2">
+                    <span class="text-muted fs-7 mb-1">{{
+                      item.createdAt
+                    }}</span>
+                  </div>
+                  <!--end::Lat seen-->
+                </div>
+              </template>
+            </div>
           </div>
           <!--end::List-->
         </div>
@@ -293,8 +334,8 @@ interface KTMessage {
   text: string;
 }
 interface KTContact {
-  name: string;
-  time: string;
+  nickname: string;
+  createdAt: string;
   color: string;
   image: string;
   comments: object[];
@@ -316,6 +357,7 @@ export default defineComponent({
   data() {
     return {
       contacts: [] as KTContact[],
+      contactsSearch: [] as KTContact[],
       topLikes: [] as KTTopLike[],
       messages: [] as any,
       username: null,
@@ -332,8 +374,9 @@ export default defineComponent({
     SocketioService.setupSocketConnection();
     SocketioService.on("member", async (member) => {
       let opt = {
-        name: member.nickname,
-        time: new Date().toISOString().slice(0, 10).replace(/-/g, "/") + "",
+        nickname: member.nickname,
+        createdAt:
+          new Date().toISOString().slice(0, 10).replace(/-/g, "/") + "",
         color: "string",
         image: member.profilePictureUrl,
         comments: [],
@@ -346,7 +389,7 @@ export default defineComponent({
         this.contacts = [opt, ...this.contacts];
       }
       this.totalMemberCount++;
-      console.log("member", member, this.contacts);
+      console.log("member", member);
     });
     SocketioService.on("gift", async (gifts) => {
       this.totalGiftCount++;
@@ -379,11 +422,27 @@ export default defineComponent({
     });
   },
   methods: {
-    onSearch() {
-      this.contacts = this.contacts.filter((item) => {
-        return item.name.includes(this.search);
-      });
-      console.log("onSearch", this.contacts, this.search);
+    onSearch(e) {
+      //this.contacts = this.contacts.filter((item) => {
+      //  return item.name.includes(this.search);
+      //});
+      this.contactsSearch = [];
+      if (e.keyCode === 13) {
+        this.loading = true;
+        if (this.search !== "") {
+          this.$http
+            .get(
+              process.env.VUE_APP_SOCKET_ENDPOINT + "/filters?q=" + this.search
+            )
+            .then((res) => {
+              this.contactsSearch = res.data;
+              this.loading = false;
+            });
+        } else {
+          this.contactsSearch = [];
+          this.loading = false;
+        }
+      }
     },
     compareValues(key, order = "asc") {
       return function innerSort(a, b) {
