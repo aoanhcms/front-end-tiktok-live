@@ -25,6 +25,7 @@
 
   <!--begin::Contacts-->
   <div class="row g-6 g-xl-9">
+    <div v-if="loading">LOADING......</div>
     <table class="table">
       <thead>
         <tr>
@@ -75,6 +76,7 @@ export default defineComponent({
   components: {
     MessengerDrawer,
   },
+  // @anhquan_198
   data() {
     return {
       columns: [
@@ -104,14 +106,17 @@ export default defineComponent({
       users: [],
       messages: [],
       checkedCustomers: false,
+      loading: false,
     };
   },
   methods: {
     async getTableData() {
+      this.loading = true;
       this.$http
         .get(process.env.VUE_APP_SOCKET_ENDPOINT + "/get_user_lists")
         .then((res) => {
           this.rows = res.data;
+          this.loading = false;
         });
     },
     openDrawer(id) {

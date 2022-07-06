@@ -29,7 +29,7 @@ class SocketioService {
   connect(uniqueId, options) {
     this.uniqueId = uniqueId;
     this.options = options || {};
-    if (this.socket.close === true) {
+    if (this.socket.connected === false) {
       this.connectFirst();
     }
     this.setUniqueId();

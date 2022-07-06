@@ -329,6 +329,7 @@ export default defineComponent({
     };
   },
   mounted() {
+    SocketioService.setupSocketConnection();
     SocketioService.on("member", async (member) => {
       let opt = {
         name: member.nickname,
@@ -345,6 +346,7 @@ export default defineComponent({
         this.contacts = [opt, ...this.contacts];
       }
       this.totalMemberCount++;
+      console.log("member", member, this.contacts);
     });
     SocketioService.on("gift", async (gifts) => {
       this.totalGiftCount++;
@@ -371,12 +373,10 @@ export default defineComponent({
       });
       if (index === -1) {
         this.topLikes = [opt, ...this.topLikes];
+        this.topLikes.sort(this.compareValues("likeCount", "desc"));
       }
-      console.log("index", index);
+      console.log("like", opt);
     });
-  },
-  created() {
-    SocketioService.setupSocketConnection();
   },
   methods: {
     onSearch() {
@@ -384,6 +384,26 @@ export default defineComponent({
         return item.name.includes(this.search);
       });
       console.log("onSearch", this.contacts, this.search);
+    },
+    compareValues(key, order = "asc") {
+      return function innerSort(a, b) {
+        // eslint-disable-next-line no-prototype-builtins
+        if (!a.hasOwnProperty(key) || !b.hasOwnProperty(key)) {
+          // property doesn't exist on either object
+          return 0;
+        }
+
+        const varA = typeof a[key] === "string" ? a[key].toUpperCase() : a[key];
+        const varB = typeof b[key] === "string" ? b[key].toUpperCase() : b[key];
+
+        let comparison = 0;
+        if (varA > varB) {
+          comparison = 1;
+        } else if (varA < varB) {
+          comparison = -1;
+        }
+        return order === "desc" ? comparison * -1 : comparison;
+      };
     },
     async submitGetUser() {
       this.contacts = [];
@@ -397,6 +417,7 @@ export default defineComponent({
           if (res.isConnected === true) {
             this.connected = this.username;
             this.username = null;
+            //SocketioService.socket = res;
           }
           this.loading = false;
         })
@@ -413,7 +434,7 @@ export default defineComponent({
     },
   },
   beforeUnmount() {
-    SocketioService.disconnect();
+    //SocketioService.disconnect();
   },
   setup() {
     const messagesRef = ref<null | HTMLElement>(null);
